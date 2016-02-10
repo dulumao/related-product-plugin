@@ -6,3 +6,7 @@ eccube.event.render.admin_product_product_edit.before:
     - [registerRelatedProduct, NORMAL]
 eccube.event.render.product_detail.before:
     - [showRelatedProduct, NORMAL]
+admin.product.edit.initialize:
+    - [onAdminProductEditInitialize, NORMAL]
+admin.Product/edit.twig
+    - [onRenderProductEdit, NOMAL]

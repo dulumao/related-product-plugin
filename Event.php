@@ -179,4 +179,73 @@ class Event
         }
     }
 
+    /**
+     * 商品登録画面のフォームに関連商品を追加する.
+     *
+     * @param EventArgs $event
+     */
+    public function onAdminProductEditInitialize(EventArgs $event)
+    {
+        $Product = $event->getArgument('Product');
+        $builder = $event->getArgument('builder');
+        $builder->add(
+            'related_collection',
+            'collection',
+            array(
+                'label' => '関連商品',
+                'type' => 'admin_related_product', // RelatedProductTypeはそのまま使う.
+                'allow_add' => true,
+                'allow_delete' => true,
+                'prototype' => true,
+                'mapped' => false,
+            )
+        );
+
+        $RelatedProducts = $this->app['eccube.plugin.repository.related_product']->findBy(
+            array(
+                'Product' => $Product,
+        ));
+
+        $builder->get('related_collection')->setData($RelatedProducts);
+    }
+
+    /**
+     *  商品登録画面のテンプレート編集.
+     *
+     * @param EventArgs $event
+     */
+    public function onRenderProductEdit(EventArgs $event)
+    {
+        $source = $event->getSource();
+
+        // 関連商品部分(form_restは利用せず、個別で差し込む)
+        $releted = file_get_contents(// twigのローダでよぶ.
+            'RelatedProduct/Resource/template/Admin/related_product.twig'
+        );
+
+        // 差し込み
+        $source = $source.$releted;
+
+        // 商品検索モーダル部分
+        $modal = file_get_contents(// twigのローダでよぶ
+            'RelatedProduct/Resource/template/Admin/related_product.twig'
+        );
+
+        // 差し込み
+        $source = $source.$modal;
+
+        // テンプレートの書き換え
+        $event->setSource($source);
+
+        // フォームの追加
+        $searchForm = $this->app['form.factory']
+            ->createBuilder('admin_search_product')
+            ->getForm();
+
+        // モーダルのテンプレートで利用するためパラメータとして追加.
+        $parameters = $event->getParameters();
+        $parameters['searchForm'] = $searchForm->crateView();
+
+        $event->setParameters()$parameters);
+    }
 }
